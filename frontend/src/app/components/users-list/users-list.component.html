@@ -1,0 +1,68 @@
+<div class="list row">
+  <div class="col-md-8">
+    <div class="input-group mb-3">
+      <input type="text" class="form-control" placeholder="Search by title" [(ngModel)]="title" />
+      <div class="input-group-append">
+        <button class="btn btn-outline-secondary" type="button" (click)="searchTitle()">
+          Search
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <h4>Users List</h4>
+    <div class="container">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Date Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of paginatedUsers; let i = index; trackBy: trackByUserId">
+            <td>{{ user.id }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user?.dateCreated | date: 'short' }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Handle case when no users are present -->
+      <div *ngIf="!users || users.length === 0" class="alert alert-warning" role="alert">
+        No users found.
+      </div>
+
+      <!-- Pagination controls -->
+      <nav aria-label="Page navigation" *ngIf="users?.length > itemsPerPage">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <a class="page-link" href="#" (click)="changePage(currentPage - 1)">Previous</a>
+          </li>
+          <li class="page-item" *ngFor="let page of [].constructor(totalPages); let i = index"
+              [class.active]="currentPage === i + 1">
+            <a class="page-link" href="#" (click)="changePage(i + 1)">{{ i + 1 }}</a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <a class="page-link" href="#" (click)="changePage(currentPage + 1)">Next</a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Handle case when no users are present -->
+      <div *ngIf="!users || users.length === 0" class="alert alert-warning" role="alert">
+        No users found.
+      </div>
+    </div>
+
+    <button class="m-3 btn btn-sm btn-danger" (click)="removeAllUsers()">
+      Remove All
+    </button>
+  </div>
+  <div class="col-md-6">
+    <app-user-details [viewMode]="true" [currentUser]="currentUser"></app-user-details>
+  </div>
+</div>

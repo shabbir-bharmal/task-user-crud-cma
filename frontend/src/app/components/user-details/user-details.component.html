@@ -1,0 +1,76 @@
+@if (viewMode){
+  @if (currentUser.id){
+  <h4>User</h4>
+  <div>
+    <label><strong>Title:</strong></label> {{ currentUser.title }}
+  </div>
+  <div>
+    <label><strong>Description:</strong></label>
+    {{ currentUser.description }}
+  </div>
+  <div>
+    <label><strong>Status:</strong></label>
+    {{ currentUser.published ? "Published" : "Pending" }}
+  </div>
+
+  <a class="badge badge-warning" routerLink="/users/{{ currentUser.id }}">
+    Edit
+  </a>
+  } @else {<p>Please click on a User...</p>}
+} @else {
+  @if (currentUser.id) {
+  <div class="edit-form">
+    <h4>User</h4>
+    <form>
+      <div class="form-group">
+        <label for="title">name</label>
+        <input
+          type="text"
+          class="form-control"
+          id="title"
+          [(ngModel)]="currentUser.name"
+          name="title"
+        />
+      </div>
+      <div class="form-group">
+        <label for="description">Email</label>
+        <input
+          type="text"
+          class="form-control"
+          id="description"
+          [(ngModel)]="currentUser.Email"
+          name="description"
+        />
+      </div>
+
+      <div class="form-group">
+        <label><strong>Status:</strong></label>
+        {{ currentUser.published ? "Published" : "Pending" }}
+      </div>
+    </form>
+
+    @if (currentUser.published) {
+    <button class="badge badge-primary mr-2"
+      (click)="updatePublished(false)" >
+      UnPublish
+    </button>
+    } @else {
+    <button class="badge badge-primary mr-2" (click)="updatePublished(true)">
+      Publish
+    </button>
+    }
+
+    <button class="badge badge-danger mr-2" (click)="deleteUser()">
+      Delete
+    </button>
+
+    <button
+      type="submit"
+      class="badge badge-success mb-2"
+      (click)="updateUser()">
+      Update
+    </button>
+    <p>{{ message }}</p>
+  </div>
+  } @else {<p>Cannot access this User...</p>}
+}
