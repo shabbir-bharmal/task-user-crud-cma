@@ -8,14 +8,13 @@ namespace UserAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly IMongoCollection<User> _users;
 
-
         public UserController(IMongoClient client)
         {
-            // Initialize the database and collection
             var database = client.GetDatabase("sample_mflix");
             _users = database.GetCollection<User>("users");
         }
@@ -25,15 +24,13 @@ namespace UserAPI.Controllers
         {
             try
             {
-
-                // Insert the user to the MongoDB collection
+                user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
                 await _users.InsertOneAsync(user);
 
                 return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
             }
             catch (Exception ex)
             {
-                // Handle any potential errors and return a friendly message
                 return BadRequest(new { message = "Failed to create user. Please try again.", error = ex.Message });
             }
         }
@@ -44,7 +41,6 @@ namespace UserAPI.Controllers
             try
             {
                 var users = await _users.Find(user => true).ToListAsync();
-
                 return Ok(users);
             }
             catch (Exception ex)
@@ -88,6 +84,35 @@ namespace UserAPI.Controllers
             {
                 return StatusCode(500, new { message = "Failed to delete user.", error = ex.Message });
             }
+        }
+
+        [HttpGet("GetUserByName{name}")]
+        public async Task<IActionResult> GetUserByName(string name)
+        {
+            try
+            {
+                var user = await _users.Find(u => u.Name == name).FirstOrDefaultAsync();
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found." });
+                }
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to retrieve user.", error = ex.Message });
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<bool> UpdateUserAsync(string id, User updatedUser)
+        {
+            var filter = Builders<User>.Filter.Eq(u => u.Id, id);
+            var update = Builders<User>.Update
+                            .Set(u => u.Name, updatedUser.Name)
+                            .Set(u => u.Email, updatedUser.Email);
+            var result = await _users.UpdateOneAsync(filter, update);
+            return result.ModifiedCount > 0;
         }
     }
 }

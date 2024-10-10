@@ -7,40 +7,51 @@ using UserAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-// Register MongoDB client
 builder.Services.AddSingleton<IMongoClient>(serviceProvider =>
 {
-    // Retrieve MongoDB connection string from configuration (appsettings.json)
     var connectionString = builder.Configuration.GetConnectionString("DbConnection");
     return new MongoClient(connectionString);
+});
+
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); 
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
 });
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp",
         builder => builder
-            .WithOrigins("http://localhost:4200") // Allow requests from localhost:4200
-            .AllowAnyMethod() // Allow any HTTP method (GET, POST, PUT, DELETE, etc.)
-            .AllowAnyHeader() // Allow any header (Content-Type, Authorization, etc.)
-            .AllowCredentials()); // If your API needs to allow credentials (cookies or authentication headers)
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyMethod() 
+            .AllowAnyHeader() 
+            .AllowCredentials()); 
 });
 
-builder.Services.Configure<JwtSettings>(
-    builder.Configuration.GetSection(nameof(JwtSettings)));
 
-builder.Services.AddAuthentication(options =>
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(jwtKey))
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    throw new InvalidOperationException("JWT Key is not configured.");
+}
+var key = Encoding.ASCII.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(options =>
+.AddJwtBearer(x =>
 {
-    options.TokenValidationParameters = new TokenValidationParameters
+    x.RequireHttpsMetadata = false;
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"])),
+        IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = false,
         ValidateAudience = false
     };
@@ -48,24 +59,25 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options => { options.AddPolicy("RequireAuthenticatedUser", policy => policy.RequireAuthenticatedUser()); });
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+app.UseSession();
+
 app.UseCors("AllowAngularApp");
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

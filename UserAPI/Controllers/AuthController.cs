@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Flurl.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -11,37 +13,56 @@ namespace UserAPI.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        [HttpPost("login")]
-        public IActionResult Login([FromBody] User user)
+        private readonly IConfiguration _configuration;
+        public AuthController(IConfiguration configuration, IMongoClient client)
         {
-            // Validate user credentials (this should be replaced with your own logic)
-            if (IsValidUser(user.Name, user.Password))
+            _configuration = configuration;
+            var database = client.GetDatabase("sample_mflix");
+            _users = database.GetCollection<User>("users");
+        }
+
+        private readonly IMongoCollection<User> _users;
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] User model)
+        {
+            var user = await _users.Find(u => u.Name == model.Name).FirstOrDefaultAsync();
+
+            if (user != null && BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
             {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.UTF8.GetBytes("QWERTYUIOPASDFGHJKLZXCVBNM1234567890!@#");
-                var tokenDescriptor = new SecurityTokenDescriptor
+                var token = GenerateJwtToken(user.Name);
+
+                HttpContext.Session.SetString("AuthToken", token);
+
+                HttpContext.Response.Cookies.Append("AuthToken", token, new CookieOptions
                 {
-                    Subject = new ClaimsIdentity(new[]
-                    {
-                 new Claim(ClaimTypes.Name, user.Name)
-             }),
-                    Expires = DateTime.UtcNow.AddHours(1),
-                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-                };
-                var token = tokenHandler.CreateToken(tokenDescriptor);
-                return Ok(new { Token = tokenHandler.WriteToken(token) });
+                    HttpOnly = true,  
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.UtcNow.AddHours(1) 
+                });
+
+                return Ok(new { Token = token });
             }
+
             return Unauthorized();
         }
 
-        private bool IsValidUser(string username, string password)
+
+        private string GenerateJwtToken(string userId)
         {
-            if (username == null || password == null) // In production, check hashed password
+            var jwtKey = _configuration["Jwt:Key"];
+            var key = Encoding.ASCII.GetBytes(jwtKey);
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-                return false;
-            }
-            // Replace this with your actual user validation logic
-            return username == "test" && password == "password"; // Example hard-coded user
+                Subject = new ClaimsIdentity(new[] { new Claim("id", userId) }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
     }
 }
