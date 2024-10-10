@@ -26,11 +26,11 @@ namespace UserAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] User model)
         {
-            var user = await _users.Find(u => u.Name == model.Name).FirstOrDefaultAsync();
+            var user = await _users.Find(u => u.Email == model.Email).FirstOrDefaultAsync();
 
             if (user != null && BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
             {
-                var token = GenerateJwtToken(user.Name);
+                var token = GenerateJwtToken(user.Email);
 
                 HttpContext.Session.SetString("AuthToken", token);
 

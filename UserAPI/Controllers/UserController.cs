@@ -25,6 +25,7 @@ namespace UserAPI.Controllers
             try
             {
                 user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+                user.CreationTime = DateTime.UtcNow;
                 await _users.InsertOneAsync(user);
 
                 return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
@@ -110,7 +111,8 @@ namespace UserAPI.Controllers
             var filter = Builders<User>.Filter.Eq(u => u.Id, id);
             var update = Builders<User>.Update
                             .Set(u => u.Name, updatedUser.Name)
-                            .Set(u => u.Email, updatedUser.Email);
+                            .Set(u => u.Email, updatedUser.Email)
+                            .Set(u => u.LastModifiedTime, DateTime.Now);
             var result = await _users.UpdateOneAsync(filter, update);
             return result.ModifiedCount > 0;
         }

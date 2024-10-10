@@ -17,5 +17,9 @@ namespace UserAPI.Models
         [BsonElement("password")]
         public string? Password { get; set; }
 
+        public DateTime? CreationTime { get; set; } 
+        public DateTime? LastLoginTime { get; set; } 
+        public DateTime? LastModifiedTime { get; private set; }
+
     }
 }
