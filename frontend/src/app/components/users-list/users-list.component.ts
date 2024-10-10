@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { User } from '../../models/user.model';
 import { UserService } from '../../services/user.service';
+import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-users-list',
@@ -17,7 +19,13 @@ export class UsersListComponent implements OnInit {
   itemsPerPage: number = 10; // You can change the number of items per page
   totalItems: number = 10;
 
-  constructor(private userService: UserService) { }
+  constructor(
+    private userService: UserService
+    , private router: Router
+    , private cdr: ChangeDetectorRef
+  ) { }
+
+
 
   ngOnInit(): void {
     this.retrieveUsers();
@@ -54,22 +62,51 @@ export class UsersListComponent implements OnInit {
     //   error: (e) => console.error(e)
     // });
   }
+  deleteUser(id: any): void {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'You won\'t be able to revert this!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'No, cancel!',
+      reverseButtons: true,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.userService.delete(id).subscribe({
+          next: (res) => {
+            console.log(res);
+            this.refreshList();
+          },
+          error: (e) => console.error(e)
+        });
+      }
+    });
+  }
 
   searchTitle(): void {
     this.currentUser = {};
     this.currentIndex = -1;
-    this.userService.findByTitle(this.title).subscribe({
-      next: (data) => {
-        this.users = data;
-        console.log(data);
-      },
-      error: (e) => console.error(e)
-    });
+    if (this.title) {
+      this.userService.findByTitle(this.title).subscribe({
+        next: (data) => {
+          this.users = [data];
+          // this.totalItems = this.users?.length;
+          this.cdr.markForCheck();
+          console.log(data);
+        },
+        error: (e) => console.error(e)
+      });
+    } else {
+      this.refreshList();
+    }
   }
 
   get paginatedUsers() {
     const start = (this.currentPage - 1) * this.itemsPerPage;
     const end = start + this.itemsPerPage;
+    console.log(start);
+    console.log(end);
     return this.users?.slice(start, end);
   }
 
@@ -85,5 +122,9 @@ export class UsersListComponent implements OnInit {
 
   trackByUserId(index: number, user: any): number {
     return user.id;
+  }
+
+  editUser(id: any): void {
+    this.router.navigate(['users', id])
   }
 }

@@ -2,6 +2,8 @@ import { Component, Input, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { User } from '../../models/user.model';
 import { UserService } from '../../services/user.service';
+import { from } from 'rxjs';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-user-details',
@@ -12,17 +14,23 @@ export class UserDetailsComponent implements OnInit {
   @Input() viewMode = false;
 
   @Input() currentUser: User = {
-    title: '',
-    description: '',
-    published: false
+    name: '',
+    email: '',
+    password: '',
   };
 
   message = '';
+  userForm = new FormGroup({
+    name: new FormControl('', [Validators.required]),
+    email: new FormControl('', [Validators.required, Validators.email]),
+    password: new FormControl('', []),
+  });
 
   constructor(
     private userService: UserService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private formBuilder: FormBuilder,
   ) {}
 
   ngOnInit(): void {
@@ -37,55 +45,33 @@ export class UserDetailsComponent implements OnInit {
       next: (data) => {
         this.currentUser = data;
         console.log(data);
+        this.userForm.patchValue(this.currentUser);
       },
       error: (e) => console.error(e)
     });
-  }
-
-  updatePublished(status: boolean): void {
-    const data = {
-      title: this.currentUser.title,
-      description: this.currentUser.description,
-      published: status
-    };
-
-    this.message = '';
-
-    // this.userService.update(this.currentUser.id, data).subscribe({
-    //   next: (res) => {
-    //     console.log(res);
-    //     this.currentUser.published = status;
-    //     this.message = res.message
-    //       ? res.message
-    //       : 'The status was updated successfully!';
-    //   },
-    //   error: (e) => console.error(e)
-    // });
   }
 
   updateUser(): void {
+    if (this.userForm.valid) {
     this.message = '';
-
-    // this.userService
-    //   .update(this.currentUser.id, this.currentUser)
-    //   .subscribe({
-    //     next: (res) => {
-    //       console.log(res);
-    //       this.message = res.message
-    //         ? res.message
-    //         : 'This user was updated successfully!';
-    //     },
-    //     error: (e) => console.error(e)
-    //   });
+    
+    this.userService
+      .update(this.currentUser.id, this.userForm?.value)
+      .subscribe({
+        next: (res) => {
+          console.log(res);
+          this.message = res.message
+            ? res.message
+            : 'This user was updated successfully!';
+            alert('This user was updated successfully!');
+              this.router.navigate(['users'])
+        },
+        error: (e) => console.error(e)
+      });
+    }
   }
 
-  deleteUser(): void {
-    this.userService.delete(this.currentUser.id).subscribe({
-      next: (res) => {
-        console.log(res);
-        this.router.navigate(['/users']);
-      },
-      error: (e) => console.error(e)
-    });
+  backToListing():void{
+    this.router.navigate(['users'])
   }
 }

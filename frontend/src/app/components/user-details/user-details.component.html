@@ -4,14 +4,6 @@
   <div>
     <label><strong>Title:</strong></label> {{ currentUser.title }}
   </div>
-  <div>
-    <label><strong>Description:</strong></label>
-    {{ currentUser.description }}
-  </div>
-  <div>
-    <label><strong>Status:</strong></label>
-    {{ currentUser.published ? "Published" : "Pending" }}
-  </div>
 
   <a class="badge badge-warning" routerLink="/users/{{ currentUser.id }}">
     Edit
@@ -19,58 +11,55 @@
   } @else {<p>Please click on a User...</p>}
 } @else {
   @if (currentUser.id) {
-  <div class="edit-form">
-    <h4>User</h4>
-    <form>
-      <div class="form-group">
-        <label for="title">name</label>
-        <input
-          type="text"
-          class="form-control"
-          id="title"
-          [(ngModel)]="currentUser.name"
-          name="title"
-        />
+    <div class="edit-form">
+      <h4>User</h4>
+      <form [formGroup]="userForm">
+
+        <div class="form-group">
+          <label for="name">Name <span class="text-danger">*</span></label>
+          <input
+            type="text"
+            class="form-control"
+            id="name"
+            formControlName="name"
+            required
+          />
+          <div *ngIf="userForm?.controls?.name?.invalid && (userForm?.controls?.name?.dirty || userForm?.controls?.name?.touched)" class="alert alert-danger">
+            <div *ngIf="userForm?.controls?.name?.errors?.['required']">Name is required.</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email <span class="text-danger">*</span></label>
+          <input
+            type="text"
+            class="form-control"
+            id="email"
+            formControlName="email"
+            required
+          />
+          <div *ngIf="userForm?.controls?.email?.invalid && (userForm?.controls?.email?.dirty || userForm?.controls?.email?.touched)" class="alert alert-danger">
+            <div *ngIf="userForm?.controls?.email?.errors?.['required']">Email is required.</div>
+            <div *ngIf="userForm?.controls?.email?.errors?.['email']">Please enter valid email address.</div>
+          </div>
+
+        </div >
+        <div class="d-flex gap-1">
+        <button
+          type="click"
+          class="btn btn-success mb-2 mr-2"
+          (click)="updateUser()">
+          Update
+        </button>
+        <button
+          type="click"
+          class="btn btn-secondary mb-2"
+          (click)="backToListing()">
+          Cancel
+        </button>
       </div>
-      <div class="form-group">
-        <label for="description">Email</label>
-        <input
-          type="text"
-          class="form-control"
-          id="description"
-          [(ngModel)]="currentUser.Email"
-          name="description"
-        />
-      </div>
-
-      <div class="form-group">
-        <label><strong>Status:</strong></label>
-        {{ currentUser.published ? "Published" : "Pending" }}
-      </div>
-    </form>
-
-    @if (currentUser.published) {
-    <button class="badge badge-primary mr-2"
-      (click)="updatePublished(false)" >
-      UnPublish
-    </button>
-    } @else {
-    <button class="badge badge-primary mr-2" (click)="updatePublished(true)">
-      Publish
-    </button>
-    }
-
-    <button class="badge badge-danger mr-2" (click)="deleteUser()">
-      Delete
-    </button>
-
-    <button
-      type="submit"
-      class="badge badge-success mb-2"
-      (click)="updateUser()">
-      Update
-    </button>
-    <p>{{ message }}</p>
-  </div>
+      </form>
+      <p>{{ message }}</p>
+    </div>
   } @else {<p>Cannot access this User...</p>}
 }

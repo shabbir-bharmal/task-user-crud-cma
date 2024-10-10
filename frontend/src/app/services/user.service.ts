@@ -1,37 +1,52 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { User } from '../models/user.model';
-
-const baseUrl = 'https://localhost:7077/api/User';
+import { AuthService } from '../auth.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  constructor(private http: HttpClient) {}
+  baseUrl = 'https://localhost:7077/api/User';
+  httpOptions: any = {
+    withCredentials : true,
+    observe: 'response' as 'response'
+  };
+  constructor(private http: HttpClient, private authService: AuthService) {}
+  
+  private getHeaders() {
+    const token = this.authService.getToken();
+    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+  }
 
   getAll(): Observable<User[]> {
-    return this.http.get<User[]>(baseUrl);
+    const headers = this.getHeaders();
+    return this.http.get<User[]>(this.baseUrl, {headers});
   }
 
   get(id: any): Observable<User> {
-    return this.http.get<User>(`${baseUrl}/${id}`);
+    const headers = this.getHeaders();
+    return this.http.get<User>(`${this.baseUrl}/${id}`, {headers});
   }
 
-  findByTitle(id: any): Observable<User> {
-    return this.http.get<User>(`${baseUrl}/${id}`);
+  findByTitle(name: any): Observable<User> {
+    const headers = this.getHeaders();
+    return this.http.get<User>(`${this.baseUrl}/GetUserByName${name}`, {headers});
   }
 
   create(data: any): Observable<any> {
-    return this.http.post(baseUrl, data);
+    const headers = this.getHeaders();
+    return this.http.post(this.baseUrl, data, {headers});
   }
 
   update(id: any, data: any): Observable<any> {
-    return this.http.put(`${baseUrl}/${id}`, data);
+    const headers = this.getHeaders();
+    return this.http.put(`${this.baseUrl}/${id}`, data, {headers});
   }
 
   delete(id: any): Observable<any> {
-    return this.http.delete(`${baseUrl}/${id}`);
+    const headers = this.getHeaders();
+    return this.http.delete(`${this.baseUrl}/${id}`, {headers});
   }
 }

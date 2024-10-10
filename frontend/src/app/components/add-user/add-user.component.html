@@ -1,8 +1,9 @@
+<form [formGroup]="userForm">
 <div>
   <div class="submit-form">
     @if (!submitted) {
     <div class="form-group">
-      <label for="title">Name</label>
+      <label for="title">Name <span class="text-danger">*</span></label>
       <input
         type="text"
         class="form-control"
@@ -10,24 +11,50 @@
         required
         [(ngModel)]="user.name"
         name="name"
+        formControlName="name"
       />
+      <div *ngIf="userForm?.controls?.name?.invalid && (userForm?.controls?.name?.dirty || userForm?.controls?.name?.touched)" class="alert alert-danger">
+        <div *ngIf="userForm?.controls?.name?.errors?.['required']">Name is required.</div>
+      </div>
     </div>
 
     <div class="form-group">
-      <label for="description">Email</label>
+      <label for="email">Email <span class="text-danger">*</span></label>
       <input
         class="form-control"
-        id="description"
+        id="email"
         required
-        [(ngModel)]="user.Email"
-        name="description"
+        [(ngModel)]="user.email"
+        name="email"
+        formControlName="email"
       />
+      <div *ngIf="userForm?.controls?.email?.invalid && (userForm?.controls?.email?.dirty || userForm?.controls?.email?.touched)" class="alert alert-danger">
+        <div *ngIf="userForm?.controls?.email?.errors?.['required']">Email is required.</div>
+        <div *ngIf="userForm?.controls?.email?.errors?.['email']">Please enter valid email address.</div>
+      </div>
     </div>
 
-    <button (click)="saveUser()" class="btn btn-success">Submit</button>
+    <div class="form-group">
+      <label for="password">Password <span class="text-danger">*</span></label>
+      <input
+        class="form-control"
+        id="password"
+        required
+        [(ngModel)]="user.password"
+        name="password"
+        formControlName="password"
+      />
+      <div *ngIf="userForm?.controls?.password?.invalid && (userForm?.controls?.password?.dirty || userForm?.controls?.password?.touched)" class="alert alert-danger">
+        <div *ngIf="userForm?.controls?.password?.errors?.['required']">Password is required.</div>
+        <div *ngIf="userForm?.controls?.password?.errors?.['minLength']">Please enter valid Password.</div>
+      </div>
+    </div>
+
+    <button (click)="saveUser()" type="submit" class="btn btn-success">Submit</button>
     } @else {
     <h4>User was submitted successfully!</h4>
     <button class="btn btn-success" (click)="newUser()">Add</button>
     }
   </div>
 </div>
+</form>
