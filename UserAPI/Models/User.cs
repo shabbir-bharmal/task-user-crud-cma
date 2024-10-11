@@ -12,14 +12,15 @@ namespace UserAPI.Models
         public string? Id { get; set; }
         [BsonElement("name")]
         public string? Name { get; set; }
+        [BsonElement("DateOfBirth")]
+        public DateTime? DateOfBirth { get; set; }
         [BsonElement("email")]
         public string? Email { get; set; }
         [BsonElement("password")]
         public string? Password { get; set; }
-
-        public DateTime? CreationTime { get; set; } 
-        public DateTime? LastLoginTime { get; set; } 
-        public DateTime? LastModifiedTime { get; private set; }
-
+        [BsonElement("dateCreated")]
+        public DateTime? CreatedAt { get; set; } 
+        public DateTime? LastLoginAt { get; set; } 
+        public DateTime? UpdatedAt { get; private set; }
     }
 }

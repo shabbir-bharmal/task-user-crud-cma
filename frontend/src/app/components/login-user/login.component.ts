@@ -40,7 +40,7 @@ export class LoginComponent {
       this.http.post(this.baseUrl + '/Auth/login', { email: name, password: password }, { withCredentials: true }).subscribe(
         (res: any) => {
           // Successful login
-          this.authService.login(res?.token)
+          this.authService.login(res)
           window.location.href = '/users';
         },
         (error) => {

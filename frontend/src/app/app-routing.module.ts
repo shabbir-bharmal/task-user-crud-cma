@@ -9,8 +9,8 @@ import { AuthGuard } from './auth.guard';
 const routes: Routes = [
   { path: 'login', component: LoginComponent }, // Public route
   { path: 'users', component: UsersListComponent, canActivate: [AuthGuard] },
+  { path: 'users/add', component: AddUserComponent, canActivate: [AuthGuard], pathMatch: 'full' },
   { path: 'users/:id', component: UserDetailsComponent, canActivate: [AuthGuard] },
-  { path: 'add', component: AddUserComponent, canActivate: [AuthGuard] },
   { path: '', redirectTo: 'login', pathMatch: 'full' }, // Default to login
   { path: '**', redirectTo: 'login' }, // Catch-all for undefined routes
 ];

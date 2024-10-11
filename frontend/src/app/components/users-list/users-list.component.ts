@@ -12,6 +12,7 @@ import Swal from 'sweetalert2';
 export class UsersListComponent implements OnInit {
   users?: any;
   currentUser: User = {};
+  loggedInUserId;
   currentIndex = -1;
   title = '';
 
@@ -23,7 +24,9 @@ export class UsersListComponent implements OnInit {
     private userService: UserService
     , private router: Router
     , private cdr: ChangeDetectorRef
-  ) { }
+  ) { 
+    this.loggedInUserId = localStorage.getItem('userId')?.toString();    
+  }
 
 
 
@@ -62,7 +65,21 @@ export class UsersListComponent implements OnInit {
     //   error: (e) => console.error(e)
     // });
   }
-  deleteUser(id: any): void {
+  deleteUser(id: any): any {
+    var userId = localStorage.getItem('userId');    
+    if(userId == id){
+      Swal.fire({
+        title: 'Warning!',
+        text: 'Logged-in user can\'t be deleted.',
+        icon: 'warning',
+        showCancelButton: false,
+        confirmButtonText: 'Ok',
+        reverseButtons: false,
+        toast: true,
+      }).then((result) => {
+      });
+      return false;  
+    }
     Swal.fire({
       title: 'Are you sure?',
       text: 'You won\'t be able to revert this!',
@@ -84,14 +101,17 @@ export class UsersListComponent implements OnInit {
     });
   }
 
+  addUser(): void {
+    this.router.navigate(['/users/add']);
+  }
+
   searchTitle(): void {
     this.currentUser = {};
     this.currentIndex = -1;
     if (this.title) {
       this.userService.findByTitle(this.title).subscribe({
         next: (data) => {
-          this.users = [data];
-          // this.totalItems = this.users?.length;
+          this.users = data;
           this.cdr.markForCheck();
           console.log(data);
         },
@@ -126,5 +146,19 @@ export class UsersListComponent implements OnInit {
 
   editUser(id: any): void {
     this.router.navigate(['users', id])
+  }
+
+  getDisplayedPages(): number[] {
+    const totalPagesToShow = 5; // Adjust this value to change the number of adjacent pages to display
+    const pages: number[] = [];
+    
+    const startPage = Math.max(1, this.currentPage - 2);
+    const endPage = Math.min(this.totalPages, this.currentPage + 2);
+  
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
   }
 }

@@ -1,20 +1,15 @@
 <div>
-  <nav class="navbar navbar-expand navbar-dark bg-dark" *ngIf="isLoggedIn">
-    <a href="#" class="navbar-brand">bezKoder</a>
-    <div class="navbar-nav mr-auto">
-      <li class="nav-item">
-        <a routerLink="users" class="nav-link">Users</a>
-      </li>
-      <li class="nav-item">
-        <a routerLink="add" class="nav-link">Add</a>
-      </li>
+    <nav class="navbar navbar-expand navbar-dark bg-dark" *ngIf="isLoggedIn">
+        <div class="row w-100">
+            <div class="col-2">
+                <a routerLink="users" class="navbar-brand">User Management</a>
+            </div>
+            <div class="col-10 text-right mt-2">
+                <button (click)="onLogout()" class="btn btn-danger btn-sm py-1 px-2 ml-auto">Logout</button>                
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-3">
+        <router-outlet></router-outlet>
     </div>
-    <div>
-      <button (click)="onLogout()" class="btn btn-danger">Logout</button>
-    </div>
-  </nav>
-
-  <div class="container mt-3">
-    <router-outlet></router-outlet>
-  </div>
 </div>

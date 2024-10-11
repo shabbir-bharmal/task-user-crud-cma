@@ -1,5 +1,4 @@
-﻿using Flurl.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using System.IdentityModel.Tokens.Jwt;
@@ -34,15 +33,10 @@ namespace UserAPI.Controllers
 
                 HttpContext.Session.SetString("AuthToken", token);
 
-                HttpContext.Response.Cookies.Append("AuthToken", token, new CookieOptions
-                {
-                    HttpOnly = true,  
-                    Secure = true,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTimeOffset.UtcNow.AddHours(1) 
-                });
+                UpdateLastLoginDate(user.Id);
 
-                return Ok(new { Token = token });
+                return Ok(new { Token = token , Id = user.Id, ExpiresAt = DateTime.Now.AddHours(10) });
+
             }
 
             return Unauthorized();
@@ -58,11 +52,20 @@ namespace UserAPI.Controllers
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[] { new Claim("id", userId) }),
-                Expires = DateTime.UtcNow.AddDays(7),
+                Expires = DateTime.UtcNow.AddHours(10),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        [HttpPut("UpdateLastLoginDate{id}")]
+        private async void UpdateLastLoginDate(string id)
+        {
+            var filter = Builders<User>.Filter.Eq(u => u.Id, id);
+            var update = Builders<User>.Update
+                            .Set(u => u.LastLoginAt, DateTime.Now);
+            var result = await _users.UpdateOneAsync(filter, update);
         }
     }
 }

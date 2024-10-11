@@ -7,5 +7,6 @@ export class User {
   Email?: string;
   published?: boolean;
   password?: string;
-  dateCreated?: string;
+  createdAt?: string;
+  dateOfBirth?:any;
 }

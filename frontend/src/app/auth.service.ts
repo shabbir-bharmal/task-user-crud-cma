@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-
 @Injectable({
     providedIn: 'root',
 })
@@ -11,19 +10,29 @@ export class AuthService {
     };
     constructor() { }
 
-        isLoggedIn(): boolean {
-        return !!localStorage.getItem('authToken'); 
+    isLoggedIn(): boolean {
+        let expiresAt : any = localStorage.getItem('expiresAt') ?? new Date();
+        expiresAt = new Date(expiresAt).getTime();
+        var currentDate = new Date().getTime();
+        return expiresAt > currentDate ? !!localStorage.getItem('authToken') : false;
     }
 
     getToken(): string {
-        return localStorage.getItem('authToken') ?? ''; 
+        let expiresAt : any = localStorage.getItem('expiresAt') ?? new Date();
+        expiresAt = new Date(expiresAt).getTime();
+        var currentDate = new Date().getTime();
+        return expiresAt > currentDate ? (localStorage.getItem('authToken') ?? '') : '';
     }
 
-    login(token: string): void {
-        localStorage.setItem('authToken', token); 
+    login(userData: any): void {
+        localStorage.setItem('authToken', userData.token);
+        localStorage.setItem('userId', userData.id);
+        localStorage.setItem('expiresAt', userData.expiresAt);
     }
 
     logout(): void {
-        localStorage.removeItem('authToken'); 
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('expiresAt');
     }
 }
